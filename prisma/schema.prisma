@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Cliente {
+  id          String   @id @default(uuid())
+  nit         String   @unique
+  nombres     String @db.Text
+  apellidos   String @db.Text
+  razonSocial String? @db.Text
+  direccion   String @db.Text
+  telefono    String @db.Text
+  email       String @db.Text
+  codigoDpto  String @db.Text
+  codigoCiud  String @db.Text
+  codigoVend  String @db.Text
+  creado      DateTime @default(now())
+  actualizado DateTime @updatedAt
+  recibos     Recibo[]
+  pedidos Pedido[]
+}
+
+model Usuario {
+  id        String @default(uuid()) @unique
+  codigo    String @db.Text @unique
+  nombres   String @db.Text
+  apellidos String @db.Text
+  telefono  String @db.Text
+  correo    String @db.Text
+  tipoUsuario String @db.Text
+  recibos   Recibo[]
+  pedidos Pedido[]
+}
+
+model Producto {
+  id          String   @id @default(uuid())
+  codigo      Int      @default(autoincrement())
+  nombre      String   @db.Text
+  precio      Float    @db.DoublePrecision
+  categoria   String   @db.Text
+  creado      DateTime @default(now())
+  actualizado DateTime @updatedAt
+  imagenUrl   String   @db.Text
+
+  pedidoProductos PedidoProducto[]  // 👈 relación inversa agregada
+}
+
+
+model Recibo {
+  id            String  @id @default(uuid())
+  codigoCliente String @db.Text
+  codigoUsuario String @db.Text
+  valor         Float @db.DoublePrecision
+  cliente       Cliente @relation(fields: [codigoCliente], references: [nit])
+  vendedor      Usuario @relation(fields: [codigoUsuario], references: [codigo])
+  creado  DateTime @default(now())
+
+  @@index([codigoUsuario])
+  @@index([codigoCliente])
+}
+
+model PedidoProducto {
+  id         String   @id @default(uuid())
+  pedidoId   String
+  productoId String
+  cantidad   Int
+  precio     Float @db.DoublePrecision
+
+  pedido     Pedido   @relation(fields: [pedidoId], references: [id])
+  producto   Producto @relation(fields: [productoId], references: [id])
+
+  @@unique([pedidoId, productoId]) // para evitar duplicados
+  @@index([pedidoId])              // 👈 índice manual
+  @@index([productoId])            // 👈 índice manual
+}
+
+model Pedido {
+  id            String     @id @default(uuid())
+  clienteId     String
+  vendedorId    String
+  total         Float      @db.DoublePrecision
+  fecha         DateTime   @default(now())
+  estado        String     @default("pendiente") // pendiente, entregado, cancelado, etc.
+  observaciones String?    @db.Text
+  enviado       Boolean    @default(false)
+  fechaEnvio    DateTime?  // se llena cuando enviado = true
+  actualizado   DateTime   @updatedAt
+
+  cliente       Cliente    @relation(fields: [clienteId], references: [id])
+  vendedor      Usuario    @relation(fields: [vendedorId], references: [codigo])
+  productos     PedidoProducto[]
+
+  @@index([clienteId])
+  @@index([vendedorId])
+}
+
