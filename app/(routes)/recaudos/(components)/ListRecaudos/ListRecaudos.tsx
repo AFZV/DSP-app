@@ -31,8 +31,11 @@ async function getData(): Promise<Recibo[]> {
         },
       },
     },
+    orderBy: {
+      creado: "desc",
+    },
   });
-
+  if (!recibos) return [];
   return recibos;
 }
 

@@ -17,12 +17,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { PencilIcon, TrashIcon } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "@/hooks/use-toast";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
-
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -33,7 +43,25 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+  const router = useRouter();
+  const handleEliminar = async (id: string) => {
+    try {
+      const res = await axios.delete(`/api/recibo/${id}`);
 
+      toast({
+        title: "Recibo Eliminado",
+      });
+      router.push("/recaudos");
+      router.refresh();
+    } catch (error) {
+      console.error("Error en onSubmit:", error);
+
+      toast({
+        title: "algo salio mal",
+        variant: "destructive",
+      });
+    }
+  };
   return (
     <div>
       <div className="rounded-md border">
@@ -56,7 +84,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="text-left">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
@@ -71,16 +99,50 @@ export function DataTable<TData, TValue>({
                       )}
                     </TableCell>
                   ))}
+                  <TableCell className="text-right">
+                    <div className="flex justify-between">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="secondary"
+                              className="bg-sky-500"
+                              onClick={() => {
+                                router.push(`/recaudos/${row.getValue("id")}`);
+                              }}
+                            >
+                              <PencilIcon />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Editar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              onClick={() => {
+                                handleEliminar(row.getValue("id"));
+                              }}
+                            >
+                              <TrashIcon />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Eliminar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
+                <TableCell colSpan={columns.length}>No results.</TableCell>
               </TableRow>
             )}
           </TableBody>

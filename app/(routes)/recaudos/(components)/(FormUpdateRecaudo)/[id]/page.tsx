@@ -1,28 +1,9 @@
-///
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
-
-const formSchema = z.object({
-  codigoCliente: z.string().min(5).max(11),
-  codigoUsuario: z.string().max(50),
-  valor: z.number().min(1),
-  customer: z.string().min(2).max(50),
-  ciudad: z.string(),
-  telefono: z.string(),
-});
-
-/**  id    String  @id @default(uuid())
-  codigoCliente String @db.Text
-  codigoUsuario String @db.Text
-  valor         Float @db.DoublePrecision
-  cliente       Cliente @relation(fields: [codigoCliente], references: [id])
-  vendedor      Usuario @relation(fields: [codigoUsuario], references: [codigo])
-
-  @@index([codigoUsuario])
-  @@index([codigoCliente]) */
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,29 +15,76 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { FormCrearReciboProps } from "./FormCrearRecibo.types";
-import { useState } from "react";
-import { log } from "console";
-import { Icon, Search } from "lucide-react";
-import { headers } from "next/headers";
+
+import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
+
 import { toast } from "@/hooks/use-toast";
-import router from "next/router";
-import { useRouter } from "next/navigation";
+
+const formSchema = z.object({
+  codigoCliente: z.string().min(5).max(11),
+  codigoUsuario: z.string().max(50),
+  valor: z.number().min(1),
+  customer: z.string().min(2).max(50),
+  ciudad: z.string(),
+  telefono: z.string(),
+});
 
 interface Cliente {
-  nit: string;
   nombres: string;
   apellidos: string;
-  razonSocial: string;
   telefono: string;
   codigoCiud: string;
-  codigoVend: string;
 }
-export function FormCrearRecibo(props: FormCrearReciboProps) {
-  const { setOpenModalCreate } = props;
-  const [cliente, setCliente] = useState<Cliente[]>([]);
+interface Recibo {
+  codigoCliente: string;
+  codigoUsuario: string;
+  valor: number;
+  cliente: Cliente;
+}
+
+export default function FormUpdateRecaudo() {
+  const { id } = useParams();
   const router = useRouter();
+
+  useEffect(() => {
+    if (id && typeof id === "string") {
+      getRecibo();
+    }
+  }, [id]);
+
+  const [recibo, setRecibo] = useState<Recibo | null>(null);
+
+  const [clienteActual, setClienteActual] = useState<Cliente | null>(null);
+  const [clienteNuevo, setClientNuevo] = useState<Cliente | null>(null);
+  async function getRecibo(): Promise<void> {
+    if (!id || typeof id !== "string") {
+      console.error("No hay Id ");
+    }
+    const response = await axios.get(`/api/recibo/reciboPorId/${id}`);
+    const reciboEdit = await response.data;
+    try {
+      if (reciboEdit) setClienteActual(reciboEdit?.cliente);
+      setRecibo(reciboEdit);
+    } catch (error) {
+      throw error;
+    }
+    if (reciboEdit) {
+      setClienteActual(reciboEdit.cliente);
+      setRecibo(reciboEdit);
+
+      form.reset({
+        codigoCliente: reciboEdit.codigoCliente,
+        valor: reciboEdit.valor,
+        customer: `${reciboEdit.cliente.nombres} ${reciboEdit.cliente.apellidos}`,
+        ciudad: reciboEdit.cliente.codigoCiud,
+        telefono: reciboEdit.cliente.telefono,
+        codigoUsuario: reciboEdit.codigoUsuario,
+      });
+    }
+  }
 
   const onClickSearch = async () => {
     try {
@@ -64,7 +92,7 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
       if (!nit) return;
 
       const response = await axios.get(`/api/usuario?nit=${nit}`);
-      const data = response.data;
+      const data = await response.data;
 
       // Asignar a los campos del formulario
       form.setValue(
@@ -75,7 +103,12 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
       form.setValue("telefono", data?.telefono || "");
       form.setValue("codigoUsuario", data?.codigoVend || "");
 
-      setCliente([data]); // si necesitas guardarlo en un estado
+      setClientNuevo({
+        telefono: data.telefono,
+        codigoCiud: data.codigoCiud,
+        apellidos: data.apellidos,
+        nombres: data.nombres,
+      }); // si necesitas guardarlo en un estado
     } catch (error) {
       console.error("Error buscando cliente:", error);
     }
@@ -84,8 +117,14 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      codigoCliente: "",
-      valor: 1,
+      codigoCliente: recibo?.codigoCliente ?? "",
+      valor: recibo?.valor ?? 0,
+      customer: recibo?.cliente
+        ? `${recibo.cliente.nombres} ${recibo.cliente.apellidos}`
+        : "",
+      ciudad: clienteActual?.codigoCiud ?? "",
+      telefono: clienteActual?.telefono ?? "",
+      codigoUsuario: recibo?.codigoUsuario ?? "",
     },
   });
   const { isValid } = form.formState;
@@ -94,18 +133,17 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const res = await axios.post("/api/recibo", {
+      const res = await axios.put(`/api/recibo/${id}`, {
         codigoCliente: values.codigoCliente,
-        codigoUsuario: cliente[0]?.codigoVend,
+        codigoUsuario: values.codigoUsuario,
         valor: values.valor,
       });
 
       toast({
-        title: "Recibo Creado",
+        title: "Recibo Actualizado",
       });
-
+      router.push("/recaudos");
       router.refresh();
-      setOpenModalCreate(false);
     } catch (error) {
       console.error("Error en onSubmit:", error);
 
@@ -116,6 +154,7 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
     }
   };
 
+  if (!id) return;
   return (
     <div>
       <Form {...form}>
@@ -207,12 +246,14 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
             />
             <FormField
               control={form.control}
-              name="valor" //
+              name="valor"
+              //
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Total Cobrado</FormLabel>
                   <FormControl>
                     <Input
+                      autoFocus
                       type="number"
                       placeholder="Digite un valor sin puntos ni comas"
                       value={field.value}
@@ -228,7 +269,7 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
             />
           </div>
           <Button disabled={!isValid} type="submit">
-            Crear
+            Actualizar
           </Button>
         </form>
       </Form>

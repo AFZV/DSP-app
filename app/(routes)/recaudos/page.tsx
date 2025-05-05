@@ -1,5 +1,5 @@
-import { HeaderRecaudos } from "./components/HeaderRecaudos";
-import { ListRecaudos } from "./components/ListRecaudos";
+import { HeaderRecaudos } from "./(components)/HeaderRecaudos";
+import { ListRecaudos } from "./(components)/ListRecaudos";
 import { auth } from "@clerk/nextjs";
 import { getUsuarios } from "@/lib/getUsuarios";
 import NoDisponible from "@/components/NoDisponible/NoDisponible";

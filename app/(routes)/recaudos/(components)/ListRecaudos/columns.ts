@@ -14,6 +14,7 @@ export type Recibo = {
     nombres: string;
     apellidos: string;
   } | null;
+  accion: string;
 };
 
 export const columns: ColumnDef<Recibo>[] = [
@@ -47,5 +48,9 @@ export const columns: ColumnDef<Recibo>[] = [
     accessorKey: "vendedor.nombres",
     header: "Vendedor",
     cell: ({ row }) => row.original.vendedor?.nombres ?? "—", // Si no hay vendedor, muestra "—"
+  },
+  {
+    accessorKey: "accion",
+    header: "Editar/Eliminar",
   },
 ];

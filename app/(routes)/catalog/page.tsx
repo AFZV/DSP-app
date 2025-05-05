@@ -1,6 +1,6 @@
-import { HeaderCatalog } from "./components/HeaderCatalog";
+import { HeaderCatalog } from "./(components)/HeaderCatalog";
 import { Separator } from "@/components/ui/separator";
-import { ListProducts } from "./components/ListProducts";
+import { ListProducts } from "./(components)/ListProducts";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";

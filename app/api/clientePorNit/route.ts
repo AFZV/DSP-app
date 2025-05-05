@@ -13,10 +13,16 @@ export async function GET(request: Request) {
         },
         select: {
           id: true,
+          nit: true,
+          nombres: true,
+          apellidos: true,
+          direccion: true,
+          telefono: true,
+          codigoCiud: true,
         },
       });
       await db.$disconnect();
-      return NextResponse.json(cliente?.id);
+      return NextResponse.json(cliente);
     } catch (error) {
       console.error("Error al buscar cliente:", error);
       await db.$disconnect();

@@ -18,17 +18,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatValue } from "@/utils/FormartValue";
 
 export function Carrito({
   carrito,
-  subtotal,
-  cantidad,
   total,
   handleEliminar,
 }: {
-  carrito: ProductProps[];
-  subtotal: number;
-  cantidad: number;
+  carrito: (ProductProps & { cantidad: number })[];
   total: number;
   handleEliminar: (index: number) => void; //esto para eloiminar el producto de acuero al indice
 }) {
@@ -57,7 +54,7 @@ export function Carrito({
               <TableCell>{producto.cantidad}</TableCell>
               <TableCell className="text-right">${producto.precio}</TableCell>
               <TableCell className="text-right">
-                ${producto.precio * cantidad}
+                {formatValue(producto.precio * producto.cantidad)}
               </TableCell>
               <TableCell className="text-right">
                 <TooltipProvider>
@@ -84,7 +81,9 @@ export function Carrito({
             <TableCell colSpan={4} className="text-right font-bold">
               Total:
             </TableCell>
-            <TableCell className="text-right font-bold">${total}</TableCell>
+            <TableCell className="text-right font-bold">
+              {formatValue(total)}
+            </TableCell>
           </TableRow>
         </TableFooter>
       </Table>
