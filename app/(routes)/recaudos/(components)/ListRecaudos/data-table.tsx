@@ -24,15 +24,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { PencilIcon, TrashIcon } from "lucide-react";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
+import { GetCurrentUserId } from "@/lib/getUsuarios";
+import { useEffect, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
+
+//terminan los imports
+
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -43,7 +47,28 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
+  //to do 1 traer el userId desde el back puesto que estamos en el front no usar auth()
+  const [admin, setAdmin] = useState<boolean>(false);
+  //to do 2 con el userId ver que usuario esta en sesion y de acuerdo a eso permitrile eliminar o no recibos
+
   const router = useRouter();
+
+  useEffect(() => {
+    const getDataDb = async (): Promise<void> => {
+      const response = await fetch("/api/usuario/rol");
+      const { userId, tipoUsuario } = await response.json();
+      console.log("Usuario autenticado:", userId, tipoUsuario);
+
+      if (tipoUsuario === "admin") {
+        setAdmin(true);
+      } else {
+        setAdmin(false);
+      }
+    };
+
+    getDataDb();
+  }, []);
   const handleEliminar = async (id: string) => {
     try {
       const res = await axios.delete(`/api/recibo/${id}`);
@@ -71,7 +96,7 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="text-center">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -84,7 +109,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="text-left">
+          <TableBody className="text-center">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
@@ -99,45 +124,6 @@ export function DataTable<TData, TValue>({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell className="text-right">
-                    <div className="flex justify-between">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="secondary"
-                              className="bg-sky-500"
-                              onClick={() => {
-                                router.push(`/recaudos/${row.getValue("id")}`);
-                              }}
-                            >
-                              <PencilIcon />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Editar</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              onClick={() => {
-                                handleEliminar(row.getValue("id"));
-                              }}
-                            >
-                              <TrashIcon />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Eliminar</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (

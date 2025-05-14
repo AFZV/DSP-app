@@ -1,11 +1,10 @@
 import { CardSummary } from "./components/CardSummary";
 import { DollarSign, UserRound, BookCheck } from "lucide-react";
-import { LastOrders } from "./components/LastOrders";
 import { SalesDistribution } from "./components/SalesDistribution";
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
 import NoDisponible from "@/components/NoDisponible/NoDisponible";
-import { getUser, getUsuarios } from "@/lib/getUsuarios";
+import { getUsuarios } from "@/lib/getUsuarios";
 import { getRecibos } from "@/lib/getRecibos";
 import { getPedidos } from "@/lib/getPedidos";
 
@@ -16,7 +15,16 @@ export default async function Home() {
   if (!userId) {
     return <NoDisponible />;
   }
-  const user = await getUser(userId);
+
+  const userResponse = await db.usuario.findUnique({
+    where: {
+      codigo: userId,
+    },
+    select: {
+      tipoUsuario: true,
+    },
+  });
+  const user = userResponse?.tipoUsuario;
 
   const totalClientes = async (id: string): Promise<number> => {
     if (user === "admin") {
@@ -29,8 +37,8 @@ export default async function Home() {
     });
   };
 
-  const total = await getRecibos(userId, user);
-  const totalPedidos = await getPedidos(userId, user);
+  const total = await getRecibos(userId, user as string);
+  const totalPedidos = await getPedidos(userId, user as string);
   const sumClientes = await totalClientes(userId);
   const isValid = !!usuarios.find((usuario) => usuario.codigo === userId);
 

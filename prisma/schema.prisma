@@ -48,7 +48,7 @@ model Producto {
   actualizado DateTime @updatedAt
   imagenUrl   String   @db.Text
 
-  pedidoProductos PedidoProducto[]  // 👈 relación inversa agregada
+  pedidoProductos PedidoProducto[]  // 👈
 }
 
 
@@ -57,9 +57,12 @@ model Recibo {
   codigoCliente String @db.Text
   codigoUsuario String @db.Text
   valor         Float @db.DoublePrecision
+  tipo String  @db.Text
+  concepto String @db.Text
   cliente       Cliente @relation(fields: [codigoCliente], references: [nit])
   vendedor      Usuario @relation(fields: [codigoUsuario], references: [codigo])
   creado  DateTime @default(now())
+  
 
   @@index([codigoUsuario])
   @@index([codigoCliente])
@@ -75,9 +78,9 @@ model PedidoProducto {
   pedido     Pedido   @relation(fields: [pedidoId], references: [id])
   producto   Producto @relation(fields: [productoId], references: [id])
 
-  @@unique([pedidoId, productoId]) // para evitar duplicados
-  @@index([pedidoId])              // 👈 índice manual
-  @@index([productoId])            // 👈 índice manual
+  @@unique([pedidoId, productoId]) 
+  @@index([pedidoId])             
+  @@index([productoId])          
 }
 
 model Pedido {
@@ -86,12 +89,12 @@ model Pedido {
   vendedorId    String
   total         Float      @db.DoublePrecision
   fecha         DateTime   @default(now())
-  estado        String     @default("pendiente") // pendiente, entregado, cancelado, etc.
+  estado        String     @default("pendiente") // pendiente, separado, enviado, etc.
   observaciones String?    @db.Text
   enviado       Boolean    @default(false)
-  fechaEnvio    DateTime?  // se llena cuando enviado = true
+  fechaEnvio    DateTime?  
   actualizado   DateTime   @updatedAt
-
+//agregar campo flete y boton para cambiar el estado de pendiente a separado o enviado
   cliente       Cliente    @relation(fields: [clienteId], references: [id])
   vendedor      Usuario    @relation(fields: [vendedorId], references: [codigo])
   productos     PedidoProducto[]

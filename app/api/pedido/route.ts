@@ -9,6 +9,15 @@ export async function POST(req: NextRequest) {
 
   const { carrito, observacion, clienteId } = body;
 
+  const vendedor = await db.cliente.findUnique({
+    where: {
+      id: clienteId,
+    },
+    select: {
+      codigoVend: true,
+    },
+  });
+
   try {
     if (!userId || !clienteId || !carrito?.length) {
       return NextResponse.json(
@@ -23,12 +32,13 @@ export async function POST(req: NextRequest) {
     );
 
     // Crear el pedido
+    if (!vendedor) return;
     const pedido = await db.pedido.create({
       data: {
         observaciones: observacion,
         total,
         clienteId,
-        vendedorId: userId,
+        vendedorId: vendedor.codigoVend,
         productos: {
           create: carrito.map((producto: any) => ({
             cantidad: producto.cantidad,

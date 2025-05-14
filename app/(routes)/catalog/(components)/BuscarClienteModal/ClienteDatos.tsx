@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export interface ClientePedido {
   id: string;
@@ -28,6 +29,18 @@ export function ClienteDatos({
   nit,
   setNit,
 }: ClienteDatosProps) {
+  const { toast } = useToast();
+
+  // Muestra un toast cuando se encuentra un cliente
+  /* useEffect(() => {
+    if (clienteEncontrado && cliente.id) {
+      toast({
+        title: "Cliente Encontrado",
+        description: `Se ha encontrado el cliente con NIT: ${cliente.nit}`,
+      });
+    }
+  }, [clienteEncontrado, cliente, toast]);
+*/
   const onClickSearch = async () => {
     if (nit && setNit) {
       try {
@@ -35,28 +48,65 @@ export function ClienteDatos({
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error(
-            "Error al buscar cliente:",
-            errorData.error || "Error desconocido"
-          );
+          const errorMessage =
+            errorData.error || "Error desconocido al buscar cliente";
+          console.error("Error al buscar cliente:", errorMessage);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: errorMessage,
+          });
           setCliente({ ...cliente });
           setClienteEncontrado(false);
           return;
         }
+
         const data = await response.json();
-        console.log("esto llega en data al seleciconar cliente:", data);
-        setCliente({ ...data, ciudad: data.codigoCiud });
-        setClienteEncontrado(true);
+
+        if (data && data.id) {
+          setCliente({ ...data, ciudad: data.codigoCiud });
+          setClienteEncontrado(true);
+          toast({
+            variant: "default",
+            title: `cliente encontrado con nit:${nit}`,
+          });
+        } else {
+          setCliente({
+            id: "",
+            nit: "",
+            nombres: "",
+            apellidos: "",
+            telefono: "",
+            ciudad: "",
+            direccion: "",
+          });
+          setClienteEncontrado(false);
+          toast({
+            title: "Cliente No Encontrado",
+            description:
+              "No se encontró ningún cliente con el NIT proporcionado.",
+            variant: "destructive",
+          });
+        }
       } catch (error) {
+        const message = "Error de conexión al buscar el cliente";
+        console.error(message, error);
+        toast({
+          variant: "destructive",
+          title: "Error de Conexión",
+          description: message,
+        });
         setCliente({ ...cliente });
         setClienteEncontrado(false);
       }
     } else {
+      toast({
+        title: "Advertencia",
+        description: "Por favor, ingresa un NIT para buscar.",
+      });
       console.warn("Por favor, ingresa un NIT para buscar.");
     }
   };
-
-  console.log("esto hay en ciudad :", cliente.ciudad);
 
   return (
     <div className="my-4">

@@ -1,55 +1,33 @@
 import { HeaderCatalog } from "./(components)/HeaderCatalog";
-import { Separator } from "@/components/ui/separator";
-import { ListProducts } from "./(components)/ListProducts";
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { Button } from "@/components/ui/button";
+import { GetCurrentUserId, getUser } from "@/lib/getUsuarios";
+import { getAllProducts } from "@/lib/productos/getAll";
+import { CatalogClientWrapper } from "./(components)/CatalogClientWrapper";
 
 export default async function CatalogPage() {
-  const { userId } = auth();
+  const userId = await GetCurrentUserId();
 
-  if (!userId) {
-    return <div>No autorizado</div>; // También puedes hacer redirect aquí si prefieres
-  }
-  const products = await db.producto.findMany({
-    orderBy: {
-      nombre: "asc",
-    },
+  if (!userId) return <div>No autorizado</div>;
+
+  const products = await getAllProducts();
+
+  const userExist = await db.usuario.findUnique({
+    where: { codigo: userId },
+    select: { codigo: true, nombres: true, apellidos: true },
   });
 
-  const user = await clerkClient.users.getUser(userId);
-  const email = user.emailAddresses[0].emailAddress;
+  if (!userExist) return <div>Usuario no encontrado</div>;
 
-  const usuarioEmail = await db.usuario.findFirst({
-    where: { correo: email },
-    select: {
-      codigo: true,
-      nombres: true,
-      apellidos: true,
-      tipoUsuario: true,
-    },
-  });
-
-  if (!usuarioEmail) {
-    return <div>Usuario no encontrado</div>;
-  }
-
-  const tipoUsuario = usuarioEmail.tipoUsuario;
+  const userType = await getUser(userId);
 
   return (
     <div>
-      {tipoUsuario === "admin" && (
-        <div className="mb-2">
-          <HeaderCatalog />
-          <div className="text-sm text-muted-foreground">
-            Bienvenido, {usuarioEmail.nombres} {usuarioEmail.apellidos}
-          </div>
-        </div>
-      )}
-      <Button>FILTRAR</Button>
-      <Separator />
+      {userType === "admin" && <HeaderCatalog />}
+      <div className="text-sm text-muted-foreground mb-2">
+        Bienvenido, {userExist.nombres} {userExist.apellidos}
+      </div>
 
-      <ListProducts productos={products} />
+      <CatalogClientWrapper productos={products} />
     </div>
   );
 }

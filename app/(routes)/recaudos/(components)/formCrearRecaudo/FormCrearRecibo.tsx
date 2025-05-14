@@ -12,17 +12,9 @@ const formSchema = z.object({
   customer: z.string().min(2).max(50),
   ciudad: z.string(),
   telefono: z.string(),
+  tipo: z.string(),
+  concepto: z.string(),
 });
-
-/**  id    String  @id @default(uuid())
-  codigoCliente String @db.Text
-  codigoUsuario String @db.Text
-  valor         Float @db.DoublePrecision
-  cliente       Cliente @relation(fields: [codigoCliente], references: [id])
-  vendedor      Usuario @relation(fields: [codigoUsuario], references: [codigo])
-
-  @@index([codigoUsuario])
-  @@index([codigoCliente]) */
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +32,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 
 import { useRouter } from "next/navigation";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Cliente {
   nit: string;
@@ -55,6 +47,7 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
   const { setOpenModalCreate } = props;
   const [cliente, setCliente] = useState<Cliente[]>([]);
   const router = useRouter();
+  const { toast } = useToast();
 
   const onClickSearch = async () => {
     try {
@@ -62,9 +55,22 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
       if (!nit) return;
 
       const response = await axios.get(`/api/usuario?nit=${nit}`);
+      console.log("response:", response);
+      if (response.data === null) {
+        toast({
+          variant: "destructive",
+          title: `el cliente con el nit: ${nit}, no existe`,
+          duration: 2000,
+        });
+        return;
+      }
+      toast({
+        variant: "default",
+        title: `cliente encontrado nit:${nit}`,
+        duration: 2000,
+      });
       const data = response.data;
 
-      // Asignar a los campos del formulario
       form.setValue(
         "customer",
         data?.nombres + data?.apellidos || data?.razonSocial
@@ -84,6 +90,8 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
     defaultValues: {
       codigoCliente: "",
       valor: 1,
+      tipo: "",
+      concepto: "",
     },
   });
   const { isValid } = form.formState;
@@ -96,6 +104,8 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
         codigoCliente: values.codigoCliente,
         codigoUsuario: cliente[0]?.codigoVend,
         valor: values.valor,
+        tipo: values.tipo,
+        concepto: values.concepto,
       });
 
       toast({
@@ -127,7 +137,17 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
                   <FormItem>
                     <FormLabel>Nit</FormLabel>
                     <FormControl>
-                      <Input placeholder="nit" type="text" {...field} />
+                      <Input
+                        placeholder="nit"
+                        type="text"
+                        {...field}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            onClickSearch();
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormDescription>Digita el nit del cliente</FormDescription>
                     <FormMessage />
@@ -203,6 +223,30 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
                 </FormItem>
               )}
             />
+
+            <div className="col-span-2">
+              <FormField
+                control={form.control}
+                name="tipo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Departamento</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="w-full border rounded-md p-2 outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Seleccione Una opcion</option>
+                        <option value="efectivo">EFECTIVO</option>
+                        <option value="consignacion">CONSIGNACION</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="valor" //
@@ -225,6 +269,22 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
                 </FormItem>
               )}
             />
+            <div className="col-span-3">
+              <FormField
+                control={form.control}
+                name="concepto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Concepto o descripcion</FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} />
+                    </FormControl>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
           <Button disabled={!isValid} type="submit">
             Crear

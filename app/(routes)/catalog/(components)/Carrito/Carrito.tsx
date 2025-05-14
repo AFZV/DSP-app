@@ -19,22 +19,32 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatValue } from "@/utils/FormartValue";
+import { Input } from "@/components/ui/input";
 
 export function Carrito({
   carrito,
   total,
   handleEliminar,
+  observacion,
+  setObservacion,
 }: {
   carrito: (ProductProps & { cantidad: number })[];
   total: number;
   handleEliminar: (index: number) => void; //esto para eloiminar el producto de acuero al indice
+  observacion: string;
+  setObservacion: (value: string) => void;
 }) {
   return (
-    <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
+    <div className="max-h-screen- overflow-y-auto overflow-x-auto">
       <Table>
         <TableCaption>
-          Productos en Carrito
-          <p>jksdbjsdjdbs</p>
+          Observación
+          <Input
+            placeholder="Observacion del pedido"
+            className="mb-3"
+            value={observacion}
+            onChange={(e) => setObservacion(e.target.value)}
+          ></Input>
         </TableCaption>
         <TableHeader>
           <TableRow>

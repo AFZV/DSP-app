@@ -1,8 +1,9 @@
 "use client";
 
-import { ProductProps } from "./CardProduct.type";
-import { Button } from "../ui/button";
 import { useState } from "react";
+import { Button } from "../ui/button";
+import { ShoppingCartIcon } from "lucide-react";
+import { ProductProps } from "./CardProduct.type";
 
 export function CardProduct({
   producto,
@@ -13,7 +14,7 @@ export function CardProduct({
 }) {
   const { imagenUrl, nombre, precio, categoria } = producto;
 
-  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const [cantidad, setCantidad] = useState(1);
 
   const handleAgregarAlCarrito = () => {
@@ -25,17 +26,21 @@ export function CardProduct({
 
   return (
     <>
-      <div className="card bg-base-100 w-96 shadow-xl hover:bg-slate-100 ">
+      <div className="card bg-base-100 w-120 shadow-xl hover:bg-slate-100 rounded-2xl ">
         <figure className="m-2">
-          <img src={imagenUrl} alt={nombre} />
+          <img src={imagenUrl} alt={nombre} className="rounded-2xl" />
         </figure>
         <div className="card-body grid grid-cols-2 text-center ">
           <h2 className="card-title col-span-2 pb-2">{nombre.toUpperCase()}</h2>
           <p className="pb-2">Categoria-{categoria.toUpperCase()}</p>
           <p className="pb-5">Precio-{precio.valueOf()}</p>
-          <div className="card-actions col-span-2">
-            <Button onClick={() => setIsOpenModal(true)}>Comprar</Button>
+          <div className="card-actions col-span-3">
+            <Button onClick={() => setIsOpenModal(true)} className="mb-3">
+              Comprar
+              <ShoppingCartIcon />
+            </Button>
           </div>
+          {/**aca va el boton de editar  */}
         </div>
       </div>
       {isOpenModal && (
@@ -45,7 +50,9 @@ export function CardProduct({
             <p>Categoria: {categoria}</p>
             <p>Precio: {precio}</p>
             <div className="my-4">
-              <label className="block mb-1">Cantidad:</label>
+              <label className="block mb-1" autoFocus={true}>
+                Cantidad:
+              </label>
               <input
                 type="number"
                 min={1}

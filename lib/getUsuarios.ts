@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs";
 import { db } from "./db";
 
 import { NextResponse } from "next/server";
@@ -38,4 +39,13 @@ export async function getUser(userId: string): Promise<string> {
     return new NextResponse("no hay usuario").json();
   }
   return user?.tipoUsuario;
+}
+
+export async function GetCurrentUserId(): Promise<string> {
+  const { userId } = auth();
+
+  if (!userId) {
+    throw new Error("No se encontró el usuario autenticado.");
+  }
+  return userId;
 }

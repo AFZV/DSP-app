@@ -1,46 +1,23 @@
 import React from "react";
-import { Recibo, columns } from "./columns";
+import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import { auth } from "@clerk/nextjs";
-import { db } from "@/lib/db";
 
-async function getData(): Promise<Recibo[]> {
-  const { userId } = auth();
-
-  if (!userId) return [];
-
-  const recibos = await db.recibo.findMany({
-    where: {
-      codigoUsuario: userId,
-    },
-    select: {
-      id: true,
-      codigoCliente: true,
-      codigoUsuario: true,
-      valor: true,
-      cliente: {
-        select: {
-          nombres: true,
-          apellidos: true,
-        },
-      },
-      vendedor: {
-        select: {
-          nombres: true,
-          id: true,
-        },
-      },
-    },
-    orderBy: {
-      creado: "desc",
-    },
-  });
-  if (!recibos) return [];
-  return recibos;
-}
+import { getRecaudosPorVendedor } from "@/lib/recaudos/getRecadosPorVendedor";
+import { getAllRecaudos } from "@/lib/recaudos/getAllRecaudos";
+import { GetCurrentUserId, getUser } from "@/lib/getUsuarios";
 
 export async function ListRecaudos() {
-  const data = await getData();
+  const userId = await GetCurrentUserId();
+  const user = await getUser(userId);
+
+  const getData = async (userType: string) => {
+    if (userType === "admin") {
+      return await getAllRecaudos();
+    } else {
+      return await getRecaudosPorVendedor();
+    }
+  };
+  const data = await getData(user);
 
   return (
     <div className="container mx-auto py-10">

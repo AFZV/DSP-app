@@ -3,8 +3,8 @@ import { ListaPedidos } from "./components/ListaPedidos";
 
 export default async function InvoicesPage() {
   return (
-    <div>
-      <HeaderInvoices />
+    <div className="flex flex-col">
+      <span className="font-bold text-2xl text-center">Lista de Pedidos</span>
       <ListaPedidos />
     </div>
   );

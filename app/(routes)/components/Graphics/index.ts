@@ -1,1 +1,1 @@
-export * from "./Graphics";
+export * from "./GraphicsVentas";

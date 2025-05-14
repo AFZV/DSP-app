@@ -122,7 +122,14 @@ export function FormCreateCliente(props: FormCreateClienteProps) {
       router.refresh();
       setOpenModalCreate(false);
     } catch (error) {
-      toast({ title: "Algo salió mal", variant: "destructive" });
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        toast({
+          title: "Ya existe un cliente con ese NIT",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Algo salió mal", variant: "destructive" });
+      }
     }
   };
 

@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
-
-import { auth } from "@clerk/nextjs";
-import { NextRequest, NextResponse } from "next/server";
+import { GetCurrentUserId } from "@/lib/getUsuarios";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const userId = await GetCurrentUserId();
+
     const body = await req.json();
 
     if (!userId) {
@@ -17,12 +17,12 @@ export async function POST(req: Request) {
         codigoCliente: body.codigoCliente,
         codigoUsuario: body.codigoUsuario,
         valor: body.valor,
+        tipo: body.tipo,
+        concepto: body.concepto,
       },
     });
-    console.log("esto hay en data :", body);
     return NextResponse.json(recibo);
   } catch (error) {
-    console.log("el error es ....:", error);
     return new NextResponse("Error Interno", { status: 500 });
   }
 }

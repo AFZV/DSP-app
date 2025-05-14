@@ -7,7 +7,13 @@ import { useState } from "react";
 import { Carrito } from "../Carrito";
 import { ClienteDatos, ClientePedido } from "../BuscarClienteModal";
 
-export function ListProducts({ productos }: { productos: ProductProps[] }) {
+export function ListProducts({
+  productos,
+  categoria,
+}: {
+  productos: ProductProps[];
+  categoria: string;
+}) {
   const [carrito, setCarrito] = useState<
     (ProductProps & { cantidad: number })[]
   >([]);
@@ -25,7 +31,6 @@ export function ListProducts({ productos }: { productos: ProductProps[] }) {
   });
   const [clienteEncontrado, setClienteEncontrado] = useState<boolean>(false);
   const [nit, setNit] = useState<string>("");
-
   const handleEliminar = (index: number) => {
     setCarrito((prevCarrito) => prevCarrito.filter((_, i) => i !== index));
   };
@@ -34,7 +39,6 @@ export function ListProducts({ productos }: { productos: ProductProps[] }) {
     (acumuluado, producto) => acumuluado + producto.precio * producto.cantidad,
     0
   );
-
   const handleFinalizarPedido = async () => {
     if (cliente.id) {
       try {
@@ -97,17 +101,27 @@ export function ListProducts({ productos }: { productos: ProductProps[] }) {
             place-items-center mt-2
         "
     >
-      {productos.map((producto) => (
-        <CardProduct
-          onAgregar={handleAgregarAlCarrito}
-          producto={producto}
-          key={producto.imagenUrl}
-        />
-      ))}
+      {categoria
+        ? productos
+            .filter((producto) => producto.categoria === categoria)
+            .map((producto) => (
+              <CardProduct
+                onAgregar={handleAgregarAlCarrito}
+                producto={producto}
+                key={producto.imagenUrl}
+              />
+            ))
+        : productos.map((producto) => (
+            <CardProduct
+              onAgregar={handleAgregarAlCarrito}
+              producto={producto}
+              key={producto.imagenUrl}
+            />
+          ))}
 
       {isOpenModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-l">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-h-[80vh] overflow-y-auto mx-4">
             {clienteEncontrado ? (
               <ClienteDatos
                 clienteEncontrado={clienteEncontrado}
@@ -130,6 +144,8 @@ export function ListProducts({ productos }: { productos: ProductProps[] }) {
               carrito={carrito}
               total={total}
               handleEliminar={handleEliminar}
+              observacion={observacion}
+              setObservacion={setObservacion}
             />
             <div className="flex justify-end space-x-2">
               <Button

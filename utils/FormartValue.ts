@@ -1,14 +1,14 @@
-export function formatValue(value: number) {
+export function formatValue(value: number): string {
   if (!value) {
-    return 0;
+    return "$0";
   }
   try {
-    const formateado = value.toLocaleString("es-CO", {
+    return value.toLocaleString("es-CO", {
       style: "currency",
       currency: "COP",
     });
-    return formateado;
   } catch (error) {
     console.log("error al formatear:", error);
+    return "$0";
   }
 }

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { GetCurrentUserId, getUser } from "@/lib/getUsuarios";
 import { auth } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -40,12 +41,15 @@ export async function DELETE(
   const { id } = params;
 
   try {
-    const { userId } = auth();
+    const userId = await GetCurrentUserId();
+    const user = await getUser(userId);
 
     if (!userId) {
       return new NextResponse("No Autorizado", { status: 401 });
     }
-
+    if (user !== "admin") {
+      return new NextResponse("Acceso denegado: solo admin", { status: 403 });
+    }
     const recibo = await db.recibo.delete({
       where: {
         id: id,
