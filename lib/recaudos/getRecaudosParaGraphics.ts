@@ -32,15 +32,15 @@ export async function getRecaudosParaGraphics(
       "diciembre",
     ];
 
-    const ventasPorMes: { Mes: string; ventas: number }[] = Array.from(
+    const ventasPorMes: { Mes: string; cobros: number }[] = Array.from(
       { length: 12 },
-      (_, i) => ({ Mes: meses[i], ventas: 0 })
+      (_, i) => ({ Mes: meses[i], cobros: 0 })
     );
 
     recaudos.forEach((recaudo) => {
       const fecha = new Date(recaudo.creado);
       const mesIndex = fecha.getMonth(); // 0-11
-      ventasPorMes[mesIndex].ventas += Number(recaudo._sum?.valor || 0);
+      ventasPorMes[mesIndex].cobros += Number(recaudo._sum?.valor || 0);
     });
 
     return ventasPorMes;

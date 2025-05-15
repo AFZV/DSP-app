@@ -11,7 +11,7 @@ const formSchema = z.object({
   valor: z.number().min(1),
   customer: z.string().min(2).max(50),
   ciudad: z.string(),
-  telefono: z.string(),
+  email: z.string(),
   tipo: z.string(),
   concepto: z.string(),
 });
@@ -39,7 +39,7 @@ interface Cliente {
   nombres: string;
   apellidos: string;
   razonSocial: string;
-  telefono: string;
+  email: string;
   codigoCiud: string;
   codigoVend: string;
 }
@@ -76,7 +76,7 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
         data?.nombres + data?.apellidos || data?.razonSocial
       );
       form.setValue("ciudad", data?.codigoCiud || "");
-      form.setValue("telefono", data?.telefono || "");
+      form.setValue("email", data?.email || "");
       form.setValue("codigoUsuario", data?.codigoVend || "");
 
       setCliente([data]); // si necesitas guardarlo en un estado
@@ -100,6 +100,7 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Paso 1: Crear el recibo en la base de datos
       const res = await axios.post("/api/recibo", {
         codigoCliente: values.codigoCliente,
         codigoUsuario: cliente[0]?.codigoVend,
@@ -108,17 +109,26 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
         concepto: values.concepto,
       });
 
+      // Paso 2: Enviar correo solo si la creación fue exitosa
+      await axios.post("/api/send", {
+        customer: values.customer,
+        ciudad: values.ciudad,
+        valor: values.valor,
+        tipo: values.tipo,
+        concepto: values.concepto,
+        email: values.email,
+      });
+
       toast({
-        title: "Recibo Creado",
+        title: "Recibo creado y enviado correctamente",
       });
 
       router.refresh();
       setOpenModalCreate(false);
     } catch (error) {
       console.error("Error en onSubmit:", error);
-
       toast({
-        title: "algo salio mal",
+        title: "Ocurrió un error",
         variant: "destructive",
       });
     }
@@ -178,31 +188,16 @@ export function FormCrearRecibo(props: FormCrearReciboProps) {
 
             <FormField
               control={form.control}
-              name="ciudad"
+              name="email"
               disabled //
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ciudad</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="text" disabled {...field} />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="telefono"
-              disabled //
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Telefono</FormLabel>
-                  <FormControl>
-                    <Input type="text" placeholder="Telefono" {...field} />
+                    <Input type="text" placeholder="Email" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Telefono al que le llegara su recibo
+                    A este correo le llegara su recibo
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
